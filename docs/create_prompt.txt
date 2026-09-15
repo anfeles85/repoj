@@ -1,0 +1,603 @@
+# Desarrollo de aplicación web REPOJ
+
+Actúa como un **arquitecto de software y desarrollador frontend senior especializado en Vue.js 3, TypeScript y aplicaciones SPA**.
+
+Necesito desarrollar una aplicación web llamada **REPOJ** utilizando tecnologías modernas, buenas prácticas de arquitectura y una estructura preparada para crecer.
+
+## 1. Tecnologías obligatorias
+
+Utiliza:
+
+* **Vue.js 3**, última versión estable disponible.
+* **Composition API** como metodología principal.
+* **TypeScript** como lenguaje de programación.
+* **Vite** como herramienta de construcción.
+* **Vue Router** para la navegación.
+* **Axios** para el consumo de APIs REST.
+* **Pinia** para el manejo del estado global cuando sea necesario.
+* HTML5 y CSS3.
+* Bootstrap 5 para estilos y componentes visuales, si se requiere un framework CSS.
+* Font Awesome o una alternativa equivalente para iconografía.
+
+No utilizar Vue 2, Options API como arquitectura principal, Vuex ni tecnologías obsoletas.
+
+---
+
+# 2. Nombre de la aplicación
+
+La aplicación debe llamarse:
+
+**REPOJ**
+
+Configura este nombre en:
+
+* `package.json`
+* título del documento HTML
+* configuración general de la aplicación
+* interfaz visual cuando corresponda.
+
+---
+
+# 3. Arquitectura general
+
+La aplicación debe utilizar una arquitectura modular y organizada.
+
+Utiliza una estructura similar a:
+
+```text
+repoj/
+├── public/
+│   └── ...
+│
+├── src/
+│   ├── assets/
+│   │   ├── css/
+│   │   ├── images/
+│   │   └── js/
+│   │
+│   ├── components/
+│   │   ├── layout/
+│   │   │   ├── Topbar.vue
+│   │   │   ├── Sidebar.vue
+│   │   │   └── Footer.vue
+│   │   │
+│   │   ├── common/
+│   │   │   ├── Loading.vue
+│   │   │   ├── AlertMessage.vue
+│   │   │   └── ConfirmDialog.vue
+│   │   │
+│   │   └── ...
+│   │
+│   ├── views/
+│   │   ├── DashboardView.vue
+│   │   ├── ...
+│   │
+│   ├── layouts/
+│   │   └── MainLayout.vue
+│   │
+│   ├── router/
+│   │   └── index.ts
+│   │
+│   ├── stores/
+│   │   └── ...
+│   │
+│   ├── services/
+│   │   ├── api.ts
+│   │   └── ...
+│   │
+│   ├── interfaces/
+│   │   └── ...
+│   │
+│   ├── types/
+│   │   └── ...
+│   │
+│   ├── composables/
+│   │   └── ...
+│   │
+│   ├── App.vue
+│   └── main.ts
+│
+├── .env
+├── .env.example
+├── index.html
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
+```
+
+Puedes modificar esta estructura si existe una alternativa técnicamente mejor, pero debes mantener una clara separación entre:
+
+* componentes visuales
+* vistas
+* layouts
+* rutas
+* servicios API
+* modelos/interfaces TypeScript
+* estado global
+* composables.
+
+---
+
+# 4. Composition API
+
+Todo componente nuevo debe utilizar preferiblemente:
+
+```vue
+<script setup lang="ts">
+```
+
+Ejemplo:
+
+```vue
+<script setup lang="ts">
+
+import { ref, onMounted } from 'vue'
+
+const loading = ref(false)
+
+onMounted(() => {
+    // lógica
+})
+
+</script>
+```
+
+Evita utilizar:
+
+```javascript
+export default {
+    data() {},
+    methods: {},
+    mounted() {}
+}
+```
+
+salvo que exista una razón técnica justificada.
+
+---
+
+# 5. TypeScript
+
+Todo el código debe estar correctamente tipado.
+
+Por ejemplo, si la aplicación consume una API que devuelve:
+
+```json
+[
+    {
+        "id": 1,
+        "description": "Reparación contador",
+        "created_at": null,
+        "updated_at": null
+    }
+]
+```
+
+crear una interfaz:
+
+```typescript
+export interface Causal {
+    id: number
+    description: string
+    created_at: string | null
+    updated_at: string | null
+}
+```
+
+No utilizar `any` salvo que sea absolutamente necesario.
+
+---
+
+# 6. Configuración de API REST
+
+Centraliza las comunicaciones HTTP utilizando Axios.
+
+Crear:
+
+```text
+src/services/api.ts
+```
+
+Configurar Axios mediante una variable de entorno:
+
+```env
+VITE_API_URL=http://127.0.0.1:8000/api
+```
+
+No escribir directamente la URL del backend dentro de los componentes.
+
+Ejemplo:
+
+```typescript
+import axios from 'axios'
+
+const api = axios.create({
+    baseURL: import.meta.env.VITE_API_URL,
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+})
+
+export default api
+```
+
+---
+
+# 7. Servicios por módulo
+
+No colocar todas las peticiones HTTP directamente dentro de las vistas.
+
+Crear servicios específicos.
+
+Por ejemplo:
+
+```text
+src/services/
+├── api.ts
+├── causalService.ts
+├── userService.ts
+└── ...
+```
+
+Ejemplo:
+
+```typescript
+import api from './api'
+import type { Causal } from '../interfaces/Causal'
+
+export const getCausales = async (): Promise<Causal[]> => {
+    const response = await api.get<Causal[]>('/causal')
+
+    return response.data
+}
+```
+
+La vista debe consumir el servicio:
+
+```typescript
+const causales = ref<Causal[]>([])
+
+const cargarCausales = async () => {
+    causales.value = await getCausales()
+}
+```
+
+---
+
+# 8. Manejo de errores
+
+Implementar un sistema consistente para manejar respuestas exitosas y errores de la API.
+
+La API puede devolver estructuras como:
+
+```json
+{
+    "success": false,
+    "message": "No se pudo realizar la operación",
+    "errors": [
+        "El campo descripción es obligatorio",
+        "El campo nombre es obligatorio"
+    ]
+}
+```
+
+o errores de Laravel como:
+
+```json
+{
+    "message": "The given data was invalid.",
+    "errors": {
+        "description": [
+            "The description field is required."
+        ]
+    }
+}
+```
+
+El frontend debe ser capaz de interpretar ambos formatos.
+
+Crear un mecanismo reutilizable para:
+
+* mostrar mensajes de éxito
+* mostrar mensajes informativos
+* mostrar errores generales
+* mostrar múltiples errores de validación
+* detectar errores HTTP 400
+* detectar errores HTTP 401
+* detectar errores HTTP 403
+* detectar errores HTTP 404
+* detectar errores HTTP 422
+* detectar errores HTTP 500
+* detectar errores de conexión.
+
+No repetir bloques `try/catch` innecesariamente en todos los componentes si puede resolverse mediante servicios o composables.
+
+---
+
+# 9. Interceptores Axios
+
+Configurar interceptores para manejar situaciones globales.
+
+Por ejemplo:
+
+```typescript
+api.interceptors.response.use(
+    response => response,
+    error => {
+        // procesamiento global de errores
+        return Promise.reject(error)
+    }
+)
+```
+
+Preparar la arquitectura para posteriormente agregar:
+
+* token JWT
+* Bearer Token
+* expiración de sesión
+* redirección al login
+* manejo global de errores.
+
+---
+
+# 10. Layout principal
+
+Crear un layout general:
+
+```text
+src/layouts/MainLayout.vue
+```
+
+Este layout debe contener:
+
+```text
+┌──────────────────────────────────────┐
+│              TOPBAR                  │
+├─────────────┬────────────────────────┤
+│             │                        │
+│   SIDEBAR   │      CONTENIDO         │
+│             │                        │
+│             │     router-view        │
+│             │                        │
+├─────────────┴────────────────────────┤
+│              FOOTER                  │
+└──────────────────────────────────────┘
+```
+
+El contenido de las diferentes vistas debe cargarse mediante:
+
+```vue
+<RouterView />
+```
+
+Las vistas NO deben repetir el Topbar, Sidebar ni Footer.
+
+---
+
+# 11. Vue Router
+
+Configurar Vue Router con rutas organizadas.
+
+Ejemplo:
+
+```typescript
+const routes = [
+    {
+        path: '/',
+        component: MainLayout,
+        children: [
+            {
+                path: '',
+                name: 'dashboard',
+                component: () => import('../views/DashboardView.vue')
+            }
+        ]
+    }
+]
+```
+
+Utilizar **lazy loading** para las vistas:
+
+```typescript
+component: () => import('../views/NombreView.vue')
+```
+
+Preparar la estructura para autenticación mediante `meta`:
+
+```typescript
+{
+    path: '/usuarios',
+    component: () => import('../views/UsuariosView.vue'),
+    meta: {
+        requiresAuth: true
+    }
+}
+```
+
+---
+
+# 12. Componentes reutilizables
+
+Crear componentes reutilizables para evitar duplicación.
+
+Por ejemplo:
+
+```text
+components/common/
+├── Loading.vue
+├── AlertMessage.vue
+├── ConfirmDialog.vue
+├── DataTable.vue
+├── BaseButton.vue
+├── BaseInput.vue
+└── BaseSelect.vue
+```
+
+Los componentes deben recibir información mediante `props` y enviar eventos mediante `emit`.
+
+Ejemplo:
+
+```vue
+<DataTable
+    :items="items"
+    :loading="loading"
+    @edit="editar"
+    @delete="eliminar"
+/>
+```
+
+---
+
+# 13. Tablas
+
+Las tablas deben permitir, cuando corresponda:
+
+* mostrar datos provenientes de API
+* indicador de carga
+* mensaje cuando no existen registros
+* mostrar errores
+* búsqueda
+* paginación
+* acciones de editar
+* acciones de eliminar
+* actualización de datos.
+
+Evitar colocar lógica excesiva directamente en el template.
+
+---
+
+# 14. Formularios
+
+Los formularios deben:
+
+* utilizar `v-model`
+* tener validación
+* mostrar errores asociados a cada campo
+* mostrar errores provenientes del backend
+* deshabilitar el botón mientras se procesa la petición
+* mostrar mensajes de éxito
+* limpiar el formulario cuando corresponda.
+
+Ejemplo conceptual:
+
+```vue
+<input
+    v-model="form.description"
+    type="text"
+    class="form-control"
+/>
+
+<div v-if="errors.description">
+    {{ errors.description }}
+</div>
+```
+
+---
+
+# 15. Variables de entorno
+
+Utilizar:
+
+```text
+.env
+.env.example
+```
+
+Ejemplo:
+
+```env
+VITE_API_URL=http://127.0.0.1:8000/api
+```
+
+Nunca colocar credenciales, contraseñas o secretos directamente en el código fuente.
+
+---
+
+# 16. Diseño visual
+
+La interfaz debe ser:
+
+* profesional
+* limpia
+* responsive
+* consistente
+* compatible con escritorio y dispositivos móviles.
+
+Utilizar Bootstrap 5 para facilitar:
+
+* grid
+* cards
+* formularios
+* botones
+* tablas
+* alertas
+* modales
+* navegación.
+
+La estructura debe permitir posteriormente integrar una plantilla administrativa como **SB Admin 2** sin tener que modificar la arquitectura de Vue.
+
+---
+
+# 17. Reglas de desarrollo
+
+Cumple estas reglas:
+
+1. Usar Vue 3.
+2. Usar Composition API.
+3. Usar `<script setup lang="ts">`.
+4. Usar TypeScript.
+5. Evitar `any`.
+6. Separar vistas de componentes.
+7. Separar servicios API de las vistas.
+8. Utilizar interfaces TypeScript para las respuestas de API.
+9. Utilizar Vue Router.
+10. Utilizar Pinia cuando exista estado compartido.
+11. Utilizar variables de entorno para URLs.
+12. No duplicar código.
+13. Crear componentes reutilizables.
+14. Manejar estados `loading`, `success` y `error`.
+15. Implementar manejo consistente de errores HTTP.
+16. Utilizar lazy loading para las vistas.
+17. Mantener nombres de archivos y variables claros.
+18. No utilizar código de Vue 2.
+19. No colocar llamadas Axios directamente en múltiples componentes.
+20. Mantener una arquitectura preparada para crecer.
+
+---
+
+# 18. Resultado esperado
+
+Genera el proyecto completo y funcional.
+
+Incluye:
+
+* estructura de carpetas
+* configuración de Vite
+* `main.ts`
+* `App.vue`
+* Vue Router
+* Pinia
+* Axios
+* configuración `.env`
+* layout principal
+* Topbar
+* Sidebar
+* Footer
+* Dashboard
+* módulo Causales
+* interfaces TypeScript
+* servicios API
+* manejo de errores
+* componentes reutilizables.
+
+Todo el código debe estar listo para ejecutar mediante:
+
+```bash
+npm install
+npm run dev
+```
+
+Explica brevemente la función de cada archivo importante y muestra los comandos necesarios para instalar las dependencias.
+
+No generes código innecesario ni mezcles responsabilidades entre componentes, vistas y servicios.
