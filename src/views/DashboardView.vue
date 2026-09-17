@@ -1,32 +1,36 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useCausalStore } from '@/stores/causalStore'
 import { useAuthStore } from '@/stores/authStore'
+import { useUserStore } from '@/stores/userStore'
+import { useGroupStore } from '@/stores/groupStore'
 import BaseButton from '@/components/common/BaseButton.vue'
 import Loading from '@/components/common/Loading.vue'
+import UserStatusBadge from '@/components/users/UserStatusBadge.vue'
 
 const router = useRouter()
-const causalStore = useCausalStore()
 const authStore = useAuthStore()
-
-const loadingMetrics = ref(true)
+const userStore = useUserStore()
+const groupStore = useGroupStore()
 
 onMounted(async () => {
-  try {
-    if (causalStore.causales.length === 0) {
-      await causalStore.fetchCausales()
-    }
-  } catch (err) {
-    console.error('Error cargando métricas iniciales:', err)
-  } finally {
-    loadingMetrics.value = false
+  if (userStore.users.length === 0) {
+    await userStore.fetchUsers()
+  }
+  if (groupStore.groups.length === 0) {
+    await groupStore.fetchGroups()
   }
 })
 
 const navigateTo = (path: string) => {
   router.push(path)
 }
+
+const totalUsers = computed(() => userStore.users.length)
+const totalActivos = computed(() => userStore.users.filter((u) => u.status === 'ACTIVO').length)
+
+const totalGroups = computed(() => groupStore.groups.length)
+const totalGruposEjecucion = computed(() => groupStore.groups.filter((g) => g.status === 'EN EJECUCION').length)
 </script>
 
 <template>
@@ -36,102 +40,114 @@ const navigateTo = (path: string) => {
       <div>
         <h1 class="h3 mb-1 text-gray-800 fw-bold">Panel Principal</h1>
         <p class="text-muted small mb-0">
-          Bienvenido(a), <span class="fw-bold text-dark">{{ authStore.user?.name }}</span>. Resumen del sistema REPOJ.
+          Bienvenido(a), <span class="fw-bold text-dark">{{ authStore.userName }}</span>. Resumen del sistema REPOJ.
         </p>
       </div>
 
       <div class="d-flex gap-2">
         <BaseButton
-          variant="primary"
-          icon="fas fa-plus"
-          @click="navigateTo('/causales')"
+          variant="outline-primary"
+          icon="fas fa-users-rectangle"
+          @click="navigateTo('/grupos')"
         >
-          Gestionar Causales
+          Grupos
+        </BaseButton>
+
+        <BaseButton
+          v-if="authStore.isAdmin"
+          variant="primary"
+          icon="fas fa-users-cog"
+          @click="navigateTo('/usuarios')"
+        >
+          Gestionar Usuarios
         </BaseButton>
       </div>
     </div>
 
     <!-- Tarjetas de Métricas Estadísticas (Estilo SB Admin 2) -->
     <div class="row g-3 mb-4">
-      <!-- Métrica: Total Causales -->
+      <!-- Métrica: Total Grupos -->
       <div class="col-xl-3 col-md-6">
         <div class="card border-left-primary shadow h-100 py-2">
           <div class="card-body">
             <div class="row align-items-center">
               <div class="col me-2">
                 <div class="stat-card-title text-primary">
-                  Causales Registradas
+                  Grupos de Formación
                 </div>
                 <div class="stat-card-value">
-                  <span v-if="loadingMetrics" class="spinner-border spinner-border-sm text-primary"></span>
-                  <span v-else>{{ causalStore.totalCount }}</span>
+                  <span v-if="groupStore.loading" class="spinner-border spinner-border-sm text-primary"></span>
+                  <span v-else>{{ totalGroups }}</span>
                 </div>
               </div>
               <div class="col-auto">
-                <i class="fas fa-clipboard-list stat-card-icon text-primary opacity-25"></i>
+                <i class="fas fa-users-rectangle stat-card-icon text-primary opacity-25"></i>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Métrica: Juicios Evaluativos -->
+      <!-- Métrica: Grupos en Ejecución -->
       <div class="col-xl-3 col-md-6">
         <div class="card border-left-success shadow h-100 py-2">
           <div class="card-body">
             <div class="row align-items-center">
               <div class="col me-2">
                 <div class="stat-card-title text-success">
-                  Juicios Evaluativos
+                  En Ejecución
                 </div>
                 <div class="stat-card-value">
-                  1,428
+                  <span v-if="groupStore.loading" class="spinner-border spinner-border-sm text-success"></span>
+                  <span v-else>{{ totalGruposEjecucion }}</span>
                 </div>
               </div>
               <div class="col-auto">
-                <i class="fas fa-graduation-cap stat-card-icon text-success opacity-25"></i>
+                <i class="fas fa-play-circle stat-card-icon text-success opacity-25"></i>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Métrica: Casos Auditados -->
+      <!-- Métrica: Total Usuarios -->
       <div class="col-xl-3 col-md-6">
         <div class="card border-left-info shadow h-100 py-2">
           <div class="card-body">
             <div class="row align-items-center">
               <div class="col me-2">
                 <div class="stat-card-title text-info">
-                  Efectividad de Reporte
+                  Usuarios del Sistema
                 </div>
                 <div class="stat-card-value">
-                  96.4%
+                  <span v-if="userStore.loading" class="spinner-border spinner-border-sm text-info"></span>
+                  <span v-else>{{ totalUsers }}</span>
                 </div>
               </div>
               <div class="col-auto">
-                <i class="fas fa-chart-line stat-card-icon text-info opacity-25"></i>
+                <i class="fas fa-users stat-card-icon text-info opacity-25"></i>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Métrica: Alertas del Sistema -->
+      <!-- Métrica: Usuarios Activos -->
       <div class="col-xl-3 col-md-6">
         <div class="card border-left-warning shadow h-100 py-2">
           <div class="card-body">
             <div class="row align-items-center">
               <div class="col me-2">
                 <div class="stat-card-title text-warning">
-                  Revisiones Pendientes
+                  Usuarios Activos
                 </div>
                 <div class="stat-card-value">
-                  12
+                  <span v-if="userStore.loading" class="spinner-border spinner-border-sm text-warning"></span>
+                  <span v-else>{{ totalActivos }}</span>
                 </div>
               </div>
               <div class="col-auto">
-                <i class="fas fa-exclamation-circle stat-card-icon text-warning opacity-25"></i>
+                <i class="fas fa-user-check stat-card-icon text-warning opacity-25"></i>
               </div>
             </div>
           </div>
@@ -139,78 +155,110 @@ const navigateTo = (path: string) => {
       </div>
     </div>
 
-    <!-- Fila de Contenido: Información general y acceso directo a Causales -->
+    <!-- Fila de Contenido: Información general y accesos -->
     <div class="row g-4">
       <!-- Columna Izquierda: Información de REPOJ -->
-      <div class="col-lg-7 col-12">
+      <div :class="authStore.isAdmin ? 'col-lg-7 col-12' : 'col-12'">
         <div class="card shadow mb-4">
           <div class="card-header py-3 d-flex align-items-center justify-content-between">
             <h6 class="m-0 fw-bold text-primary">
-              <i class="fas fa-info-circle me-1"></i> Acerca del Sistema REPOJ
+              <i class="fas fa-info-circle me-1"></i> Plataforma REPOJ
             </h6>
           </div>
           <div class="card-body">
             <p>
-              <strong>REPOJ</strong> es la plataforma especializada para el análisis, auditoría y seguimiento del reporte de 
-              <strong>juicios evaluativos</strong> de SofiaPlus. Diseñada bajo una arquitectura SPA modular y escalable 
-              con <strong>Vue.js 3, TypeScript y Bootstrap 5</strong>.
+              <strong>REPOJ</strong> es el sistema integral para la gestión, seguimiento y auditoría de fichas, 
+              grupos e informes institucionales.
             </p>
-            <div class="alert alert-info border-0 mb-3 small">
-              <i class="fas fa-shield-alt me-2"></i>
-              El módulo de <strong>Causales</strong> permite tipificar los motivos de novedad, inconsistencias o solicitudes 
-              de modificación de evaluaciones registradas en el sistema.
+
+            <div class="row g-3 my-2">
+              <div class="col-md-4">
+                <div class="p-3 border rounded-3 bg-light h-100">
+                  <div class="fw-bold text-danger mb-1">
+                    <i class="fas fa-user-shield me-1"></i> Administrador
+                  </div>
+                  <small class="text-muted">
+                    Acceso total al sistema. Gestiona y crea usuarios instructores y coordinadores.
+                  </small>
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <div class="p-3 border rounded-3 bg-light h-100">
+                  <div class="fw-bold text-primary mb-1">
+                    <i class="fas fa-chalkboard-teacher me-1"></i> Instructor
+                  </div>
+                  <small class="text-muted">
+                    Registro de fichas, creación de grupos, carga de archivos e informes de seguimiento.
+                  </small>
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <div class="p-3 border rounded-3 bg-light h-100">
+                  <div class="fw-bold text-info mb-1">
+                    <i class="fas fa-user-tie me-1"></i> Coordinador
+                  </div>
+                  <small class="text-muted">
+                    Consulta general de grupos creados por instructores y consolidación de informes.
+                  </small>
+                </div>
+              </div>
             </div>
 
-            <h6 class="fw-bold small text-dark text-uppercase mt-3 mb-2">Capacidades del Sistema:</h6>
+            <h6 class="fw-bold small text-dark text-uppercase mt-4 mb-2">Seguridad y Políticas:</h6>
             <ul class="list-unstyled mb-0">
               <li class="mb-2 d-flex align-items-center gap-2">
                 <i class="fas fa-check-circle text-success"></i>
-                <span>Gestión centralizada de catálogo de causales e incidencias.</span>
+                <span>Contraseñas seguras y encriptación con bcrypt.</span>
               </li>
               <li class="mb-2 d-flex align-items-center gap-2">
                 <i class="fas fa-check-circle text-success"></i>
-                <span>Consumo estandarizado de endpoints REST mediante Axios con interceptores.</span>
+                <span>Protección del Administrador contra eliminación o desactivación accidental.</span>
               </li>
               <li class="mb-2 d-flex align-items-center gap-2">
                 <i class="fas fa-check-circle text-success"></i>
-                <span>Manejo resiliente de errores HTTP y respuestas de validación Laravel.</span>
+                <span>Bloqueo inmediato de acceso para cuentas en estado inactivo.</span>
               </li>
             </ul>
           </div>
         </div>
       </div>
 
-      <!-- Columna Derecha: Causales Recientes -->
-      <div class="col-lg-5 col-12">
+      <!-- Columna Derecha: Usuarios Recientes (Solo para Administrador) -->
+      <div v-if="authStore.isAdmin" class="col-lg-5 col-12">
         <div class="card shadow mb-4">
           <div class="card-header py-3 d-flex align-items-center justify-content-between">
             <h6 class="m-0 fw-bold text-primary">
-              <i class="fas fa-list me-1"></i> Causales Registradas Recientes
+              <i class="fas fa-users me-1"></i> Usuarios en el Sistema
             </h6>
-            <router-link to="/causales" class="btn btn-sm btn-link p-0 text-decoration-none">
-              Ver todas <i class="fas fa-arrow-right small"></i>
+            <router-link to="/usuarios" class="btn btn-sm btn-link p-0 text-decoration-none">
+              Gestionar <i class="fas fa-arrow-right small"></i>
             </router-link>
           </div>
           <div class="card-body p-0">
-            <Loading v-if="loadingMetrics" message="Cargando catálogo..." />
+            <Loading v-if="userStore.loading" message="Cargando usuarios..." />
 
-            <div v-else-if="causalStore.causales.length === 0" class="p-4 text-center text-muted">
-              No hay causales configuradas.
+            <div v-else-if="userStore.users.length === 0" class="p-4 text-center text-muted">
+              No hay usuarios registrados.
             </div>
 
             <ul v-else class="list-group list-group-flush">
               <li
-                v-for="item in causalStore.causales.slice(0, 5)"
+                v-for="item in userStore.users.slice(0, 5)"
                 :key="item.id"
-                class="list-group-item d-flex justify-content-between align-items-center py-3"
+                class="list-group-item d-flex justify-content-between align-items-center py-3 px-3"
               >
                 <div>
-                  <span class="badge bg-secondary me-2">#{{ item.id }}</span>
-                  <span class="fw-semibold text-dark">{{ item.description }}</span>
+                  <div class="fw-semibold text-dark">{{ item.fullname }}</div>
+                  <div class="text-muted small" style="font-size: 0.75rem;">
+                    {{ item.email }}
+                  </div>
                 </div>
-                <span class="text-muted small">
-                  {{ item.created_at ? item.created_at.substring(0, 10) : '—' }}
-                </span>
+                <div class="d-flex align-items-center gap-1">
+                  <UserStatusBadge type="role" :value="item.role" />
+                  <UserStatusBadge type="status" :value="item.status" />
+                </div>
               </li>
             </ul>
           </div>

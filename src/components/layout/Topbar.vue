@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const notificationStore = useNotificationStore()
 
@@ -12,10 +14,11 @@ const emit = defineEmits<{
   (e: 'toggleSidebar'): void
 }>()
 
-const handleLogout = () => {
+const handleLogout = async () => {
   userMenuOpen.value = false
-  authStore.logout()
+  await authStore.logout()
   notificationStore.addNotification('Sesión finalizada exitosamente.', 'info', 'Hasta pronto')
+  router.push('/login')
 }
 </script>
 
@@ -72,12 +75,12 @@ const handleLogout = () => {
           @click="userMenuOpen = !userMenuOpen"
         >
           <div class="user-avatar-circle">
-            {{ authStore.user?.name?.charAt(0) || 'U' }}
+            {{ authStore.userName.charAt(0).toUpperCase() }}
           </div>
           <div class="d-none d-md-flex flex-column text-start">
-            <span class="fw-bold text-dark lh-sm">{{ authStore.user?.name || 'Usuario' }}</span>
+            <span class="fw-bold text-dark lh-sm">{{ authStore.userName }}</span>
             <span class="text-muted small lh-sm" style="font-size: 0.75rem;">
-              {{ authStore.user?.role || 'Operador' }}
+              {{ authStore.userRoleLabel }}
             </span>
           </div>
           <i class="fas fa-chevron-down text-muted small ms-1"></i>
@@ -87,18 +90,21 @@ const handleLogout = () => {
         <ul
           v-if="userMenuOpen"
           class="dropdown-menu dropdown-menu-end show shadow border-0 mt-2 position-absolute"
-          style="min-width: 200px;"
+          style="min-width: 220px;"
           @click="userMenuOpen = false"
         >
           <li class="px-3 py-2 border-bottom">
-            <p class="mb-0 fw-bold small text-dark">{{ authStore.user?.name }}</p>
+            <p class="mb-0 fw-bold small text-dark">{{ authStore.userName }}</p>
             <span class="text-muted small text-truncate d-block" style="font-size: 0.75rem;">
               {{ authStore.user?.email }}
             </span>
+            <span class="badge bg-light text-primary border mt-1" style="font-size: 0.7rem;">
+              Rol: {{ authStore.userRoleLabel }}
+            </span>
           </li>
-          <li>
+          <li v-if="authStore.isAdmin">
             <router-link to="/usuarios" class="dropdown-item py-2 small">
-              <i class="fas fa-user-circle me-2 text-secondary"></i> Mi Perfil
+              <i class="fas fa-users-cog me-2 text-secondary"></i> Gestión de Usuarios
             </router-link>
           </li>
           <li><hr class="dropdown-divider my-1"></li>

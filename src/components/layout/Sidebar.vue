@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
 
 defineProps<{
   toggled: boolean
@@ -12,6 +13,7 @@ const emit = defineEmits<{
 }>()
 
 const route = useRoute()
+const authStore = useAuthStore()
 
 const isCurrentRoute = (path: string) => {
   if (path === '/') return route.path === '/'
@@ -69,36 +71,38 @@ const isCurrentRoute = (path: string) => {
           </router-link>
         </li>
 
-        <!-- Causales -->
+        <!-- Grupos -->
         <li class="nav-item">
           <router-link
-            to="/causales"
+            to="/grupos"
             class="nav-link"
-            :class="{ active: isCurrentRoute('/causales') }"
+            :class="{ active: isCurrentRoute('/grupos') }"
             @click="emit('closeMobile')"
           >
-            <i class="fas fa-clipboard-list"></i>
-            <span>Causales</span>
+            <i class="fas fa-users-rectangle"></i>
+            <span>Grupos</span>
           </router-link>
         </li>
 
-        <!-- Encabezado de Administración -->
-        <div class="sidebar-heading mt-2">
-          Administración
-        </div>
+        <!-- Encabezado de Administración (Solo para Administrador) -->
+        <template v-if="authStore.isAdmin">
+          <div class="sidebar-heading mt-2">
+            Administración
+          </div>
 
-        <!-- Usuarios -->
-        <li class="nav-item">
-          <router-link
-            to="/usuarios"
-            class="nav-link"
-            :class="{ active: isCurrentRoute('/usuarios') }"
-            @click="emit('closeMobile')"
-          >
-            <i class="fas fa-users-cog"></i>
-            <span>Usuarios</span>
-          </router-link>
-        </li>
+          <!-- Usuarios -->
+          <li class="nav-item">
+            <router-link
+              to="/usuarios"
+              class="nav-link"
+              :class="{ active: isCurrentRoute('/usuarios') }"
+              @click="emit('closeMobile')"
+            >
+              <i class="fas fa-users-cog"></i>
+              <span>Usuarios</span>
+            </router-link>
+          </li>
+        </template>
       </ul>
 
       <!-- Botón inferior para colapsar barra en escritorio -->

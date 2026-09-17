@@ -39,7 +39,7 @@ const onConfirm = () => {
 <template>
   <div v-if="modelValue" class="modal-backdrop-custom" @click.self="close">
     <div class="modal-dialog-custom">
-      <div class="modal-content shadow-lg border-0 rounded-3">
+      <div class="modal-content bg-white shadow-lg border-0 rounded-3">
         <div class="modal-header border-0 pb-0 pt-4 px-4">
           <div class="d-flex align-items-center gap-2">
             <div
@@ -113,6 +113,10 @@ const onConfirm = () => {
   width: 100%;
   max-width: 480px;
   animation: scaleUp 0.15s ease-out;
+}
+
+.modal-content {
+  background-color: #ffffff !important;
 }
 
 .icon-circle {

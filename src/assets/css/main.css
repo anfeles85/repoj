@@ -1,6 +1,10 @@
 :root {
-  --primary-color: #4e73df;
-  --primary-gradient: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+  --primary-color: #39A900;
+  --primary-gradient: linear-gradient(180deg, #39A900 10%, #267a00 100%);
+  --bs-primary: #39A900;
+  --bs-primary-rgb: 57, 169, 0;
+  --bs-link-color: #39A900;
+  --bs-link-hover-color: #267a00;
   --success-color: #1cc88a;
   --info-color: #36b9cc;
   --warning-color: #f6c23e;
@@ -326,3 +330,67 @@ a {
     z-index: 1035;
   }
 }
+
+/* Regla 22: Sobreescritura de componentes con color institucional SENA #39A900 */
+.btn-primary {
+  --bs-btn-bg: #39A900;
+  --bs-btn-border-color: #39A900;
+  --bs-btn-hover-bg: #2f8c00;
+  --bs-btn-hover-border-color: #2b8000;
+  --bs-btn-focus-shadow-rgb: 57, 169, 0;
+  --bs-btn-active-bg: #2b8000;
+  --bs-btn-active-border-color: #267a00;
+  background-color: #39A900 !important;
+  border-color: #39A900 !important;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: #39A900;
+  --bs-btn-border-color: #39A900;
+  --bs-btn-hover-bg: #39A900;
+  --bs-btn-hover-border-color: #39A900;
+  --bs-btn-focus-shadow-rgb: 57, 169, 0;
+  --bs-btn-active-bg: #2b8000;
+  --bs-btn-active-border-color: #2b8000;
+  color: #39A900 !important;
+  border-color: #39A900 !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:active {
+  background-color: #39A900 !important;
+  color: #ffffff !important;
+}
+
+.text-primary {
+  color: #39A900 !important;
+}
+
+.bg-primary {
+  background-color: #39A900 !important;
+}
+
+.bg-primary-subtle {
+  background-color: rgba(57, 169, 0, 0.12) !important;
+  color: #267a00 !important;
+}
+
+.border-primary-subtle {
+  border-color: rgba(57, 169, 0, 0.28) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #39A900 !important;
+  box-shadow: 0 0 0 0.25rem rgba(57, 169, 0, 0.25) !important;
+}
+
+.page-item.active .page-link {
+  background-color: #39A900 !important;
+  border-color: #39A900 !important;
+}
+
+.page-link {
+  color: #39A900;
+}
+
