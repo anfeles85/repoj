@@ -44,7 +44,15 @@ const totalGruposEjecucion = computed(() => groupStore.groups.filter((g) => g.st
         </p>
       </div>
 
-      <div class="d-flex gap-2">
+      <div class="d-flex gap-2 flex-wrap">
+        <BaseButton
+          variant="outline-success"
+          icon="fas fa-chart-pie"
+          @click="navigateTo('/analisis-juicios')"
+        >
+          Análisis Juicios
+        </BaseButton>
+
         <BaseButton
           variant="outline-primary"
           icon="fas fa-users-rectangle"

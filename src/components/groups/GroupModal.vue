@@ -6,6 +6,8 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSelect, { type SelectOption } from '@/components/common/BaseSelect.vue'
 import AlertMessage from '@/components/common/AlertMessage.vue'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+import groupService from '@/services/groupService'
 
 const props = withDefaults(
   defineProps<{
@@ -37,6 +39,16 @@ const initialDate = ref('')
 const finalDate = ref('')
 const status = ref<GroupStatus>('EN EJECUCION')
 
+// Archivo de Juicios Evaluativos
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const existingFileName = ref<string | null>(null)
+const existingFileData = ref<string | null>(null)
+const selectedFile = ref<File | null>(null)
+const selectedFileData = ref<string | null>(null)
+const isExistingFileMarkedForDeletion = ref(false)
+const fileError = ref<string>('')
+const showDeleteConfirm = ref(false)
+
 const clientError = ref('')
 const fieldErrors = ref<Record<string, string>>({})
 
@@ -53,9 +65,27 @@ const statusOptions: SelectOption[] = [
   { value: 'CANCELADA', label: 'Cancelada' }
 ]
 
+const hasExistingFile = computed(() => {
+  return isEditing.value && !!existingFileData.value && !isExistingFileMarkedForDeletion.value
+})
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return bytes + ' B'
+  else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB'
+  else return (bytes / 1048576).toFixed(1) + ' MB'
+}
+
 const resetForm = () => {
   clientError.value = ''
   fieldErrors.value = {}
+  fileError.value = ''
+  selectedFile.value = null
+  selectedFileData.value = null
+  isExistingFileMarkedForDeletion.value = false
+  showDeleteConfirm.value = false
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
 
   if (props.group) {
     groupNumber.value = props.group.number
@@ -64,6 +94,8 @@ const resetForm = () => {
     initialDate.value = props.group.initial_date || ''
     finalDate.value = props.group.final_date || ''
     status.value = props.group.status || 'EN EJECUCION'
+    existingFileName.value = props.group.evaluative_judgments_file_name || null
+    existingFileData.value = props.group.evaluative_judgments_file || null
   } else {
     groupNumber.value = ''
     program.value = ''
@@ -71,6 +103,8 @@ const resetForm = () => {
     initialDate.value = ''
     finalDate.value = ''
     status.value = 'EN EJECUCION'
+    existingFileName.value = null
+    existingFileData.value = null
   }
 }
 
@@ -95,6 +129,77 @@ watch(
 const close = () => {
   if (props.loading) return
   emit('update:modelValue', false)
+}
+
+const handleFileChange = async (event: Event) => {
+  fileError.value = ''
+  const target = event.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) {
+    return
+  }
+
+  const file = target.files[0]
+
+  // Validar extensión
+  const lowerName = file.name.toLowerCase()
+  if (!lowerName.endsWith('.xls') && !lowerName.endsWith('.xlsx')) {
+    fileError.value = 'Formato inválido. El archivo debe ser un libro de Excel (.xls o .xlsx).'
+    if (target) target.value = ''
+    return
+  }
+
+  // Validar tamaño (10MB máximo)
+  const maxSize = 10 * 1024 * 1024
+  if (file.size > maxSize) {
+    fileError.value = 'El archivo seleccionado supera el tamaño máximo permitido de 10 MB.'
+    if (target) target.value = ''
+    return
+  }
+
+  try {
+    const base64 = await groupService.fileToBase64(file)
+    selectedFile.value = file
+    selectedFileData.value = base64
+    isExistingFileMarkedForDeletion.value = false
+  } catch (err) {
+    fileError.value = 'Ocurrió un error al procesar el archivo. Intente nuevamente.'
+  }
+}
+
+const triggerFileInput = () => {
+  fileError.value = ''
+  fileInputRef.value?.click()
+}
+
+const removeSelectedNewFile = () => {
+  selectedFile.value = null
+  selectedFileData.value = null
+  fileError.value = ''
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
+}
+
+const handleDownloadExisting = () => {
+  if (existingFileData.value) {
+    const name = existingFileName.value || `juicios_evaluativos_${groupNumber.value || 'ficha'}.xls`
+    groupService.downloadJudgmentsFile(existingFileData.value, name)
+  }
+}
+
+const confirmDeleteExistingFile = () => {
+  showDeleteConfirm.value = true
+}
+
+const onConfirmDeleteFile = () => {
+  isExistingFileMarkedForDeletion.value = true
+  selectedFile.value = null
+  selectedFileData.value = null
+  showDeleteConfirm.value = false
+}
+
+const undoDeleteExistingFile = () => {
+  isExistingFileMarkedForDeletion.value = false
 }
 
 const validate = (): boolean => {
@@ -145,6 +250,15 @@ const handleSubmit = () => {
       final_date: finalDate.value,
       status: status.value
     }
+
+    if (selectedFile.value && selectedFileData.value) {
+      payload.evaluative_judgments_file = selectedFileData.value
+      payload.evaluative_judgments_file_name = selectedFile.value.name
+    } else if (isExistingFileMarkedForDeletion.value) {
+      payload.evaluative_judgments_file = null
+      payload.evaluative_judgments_file_name = null
+    }
+
     emit('submit', payload)
   } else {
     const payload: CreateGroupPayload = {
@@ -155,6 +269,12 @@ const handleSubmit = () => {
       final_date: finalDate.value,
       status: status.value
     }
+
+    if (selectedFile.value && selectedFileData.value) {
+      payload.evaluative_judgments_file = selectedFileData.value
+      payload.evaluative_judgments_file_name = selectedFile.value.name
+    }
+
     emit('submit', payload)
   }
 }
@@ -294,6 +414,153 @@ const handleSubmit = () => {
                 required
               />
             </div>
+
+            <!-- Archivo de Juicios Evaluativos (Opcional) -->
+            <div class="mt-3 pt-3 border-top">
+              <label class="form-label fw-semibold text-dark d-flex align-items-center justify-content-between mb-1">
+                <span>
+                  <i class="fas fa-file-excel text-success me-1"></i>
+                  Juicios Evaluativos
+                  <span class="badge bg-light text-secondary border fw-normal ms-1">Opcional</span>
+                </span>
+                <span class="text-muted small fw-normal">Formato .xls o .xlsx (Máx. 10 MB)</span>
+              </label>
+
+              <!-- Caso 1: Archivo existente en modo edición (no marcado para eliminar y sin nuevo archivo seleccionado) -->
+              <div
+                v-if="hasExistingFile && !selectedFile"
+                class="file-card p-3 rounded-2 border bg-light d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2"
+              >
+                <div class="d-flex align-items-center gap-2 text-truncate">
+                  <div class="file-icon-box bg-success-subtle text-success">
+                    <i class="fas fa-file-excel"></i>
+                  </div>
+                  <div class="text-truncate">
+                    <div class="fw-semibold text-dark text-truncate" :title="existingFileName || 'juicios_evaluativos.xls'">
+                      {{ existingFileName || 'juicios_evaluativos.xls' }}
+                    </div>
+                    <small class="text-muted">Archivo actualmente almacenado</small>
+                  </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-success"
+                    title="Descargar archivo actual"
+                    :disabled="loading"
+                    @click="handleDownloadExisting"
+                  >
+                    <i class="fas fa-download me-1"></i> Descargar
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    title="Reemplazar por otro archivo"
+                    :disabled="loading"
+                    @click="triggerFileInput"
+                  >
+                    <i class="fas fa-sync-alt me-1"></i> Reemplazar
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    title="Eliminar archivo"
+                    :disabled="loading"
+                    @click="confirmDeleteExistingFile"
+                  >
+                    <i class="fas fa-trash-alt me-1"></i> Eliminar
+                  </button>
+                </div>
+              </div>
+
+              <!-- Caso 2: Archivo existente marcado para eliminación -->
+              <div
+                v-else-if="isExistingFileMarkedForDeletion && !selectedFile"
+                class="alert alert-warning d-flex align-items-center justify-content-between p-2 mb-0 rounded-2"
+              >
+                <div class="d-flex align-items-center gap-2">
+                  <i class="fas fa-exclamation-triangle text-warning"></i>
+                  <small class="text-dark">El archivo será eliminado al guardar los cambios.</small>
+                </div>
+                <div class="d-flex gap-1">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary py-0 px-2"
+                    @click="undoDeleteExistingFile"
+                  >
+                    <i class="fas fa-undo me-1"></i> Deshacer
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary py-0 px-2"
+                    @click="triggerFileInput"
+                  >
+                    <i class="fas fa-upload me-1"></i> Subir nuevo
+                  </button>
+                </div>
+              </div>
+
+              <!-- Caso 3: Nuevo archivo seleccionado (para crear o para reemplazar) -->
+              <div
+                v-else-if="selectedFile"
+                class="file-card p-3 rounded-2 border border-primary-subtle bg-light d-flex align-items-center justify-content-between gap-2"
+              >
+                <div class="d-flex align-items-center gap-2 text-truncate">
+                  <div class="file-icon-box bg-primary-subtle text-primary">
+                    <i class="fas fa-file-arrow-up"></i>
+                  </div>
+                  <div class="text-truncate">
+                    <div class="fw-semibold text-dark text-truncate" :title="selectedFile.name">
+                      {{ selectedFile.name }}
+                    </div>
+                    <small class="text-muted">
+                      {{ formatFileSize(selectedFile.size) }} &bull;
+                      <span class="text-primary fw-medium">
+                        {{ isEditing && existingFileData ? 'Reemplazará al archivo actual' : 'Listo para subir' }}
+                      </span>
+                    </small>
+                  </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    title="Quitar archivo seleccionado"
+                    :disabled="loading"
+                    @click="removeSelectedNewFile"
+                  >
+                    <i class="fas fa-times me-1"></i> Quitar
+                  </button>
+                </div>
+              </div>
+
+              <!-- Caso 4: No hay archivo ni guardado ni seleccionado -->
+              <div
+                v-else
+                class="upload-dropzone p-3 text-center border rounded-2 bg-light cursor-pointer"
+                @click="triggerFileInput"
+              >
+                <i class="fas fa-cloud-upload-alt fs-3 text-secondary mb-1"></i>
+                <div class="small fw-semibold text-dark">Haga clic para adjuntar el archivo XLS de juicios evaluativos</div>
+                <div class="text-muted" style="font-size: 0.75rem;">Archivos .xls o .xlsx</div>
+              </div>
+
+              <!-- Input de archivo oculto -->
+              <input
+                ref="fileInputRef"
+                type="file"
+                class="d-none"
+                accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                @change="handleFileChange"
+              />
+
+              <!-- Mensaje de error de validación de archivo -->
+              <div v-if="fileError" class="text-danger small mt-1">
+                <i class="fas fa-exclamation-circle me-1"></i> {{ fileError }}
+              </div>
+            </div>
           </div>
 
           <!-- Pie del modal con acciones -->
@@ -319,6 +586,17 @@ const handleSubmit = () => {
         </form>
       </div>
     </div>
+
+    <!-- Confirmación para eliminar archivo existente -->
+    <ConfirmDialog
+      v-model="showDeleteConfirm"
+      title="Eliminar Archivo de Juicios Evaluativos"
+      message="¿Está seguro de eliminar el archivo de juicios evaluativos asociado a este grupo? El archivo se removerá de la base de datos al guardar los cambios."
+      confirm-text="Sí, Eliminar Archivo"
+      cancel-text="Cancelar"
+      variant="danger"
+      @confirm="onConfirmDeleteFile"
+    />
   </div>
 </template>
 
@@ -360,6 +638,37 @@ const handleSubmit = () => {
   font-size: 1.15rem;
 }
 
+.file-card {
+  transition: all 0.2s ease;
+}
+
+.file-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.upload-dropzone {
+  border-style: dashed !important;
+  border-width: 2px !important;
+  border-color: #ced4da !important;
+  transition: all 0.2s ease;
+}
+
+.upload-dropzone:hover {
+  border-color: #39A900 !important;
+  background-color: #f8fff5 !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -376,3 +685,4 @@ const handleSubmit = () => {
   }
 }
 </style>
+

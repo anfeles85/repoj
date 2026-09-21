@@ -84,6 +84,19 @@ const isCurrentRoute = (path: string) => {
           </router-link>
         </li>
 
+        <!-- Análisis de Juicios Evaluativos -->
+        <li class="nav-item">
+          <router-link
+            to="/analisis-juicios"
+            class="nav-link"
+            :class="{ active: isCurrentRoute('/analisis-juicios') }"
+            @click="emit('closeMobile')"
+          >
+            <i class="fas fa-chart-pie"></i>
+            <span>Análisis Juicios</span>
+          </router-link>
+        </li>
+
         <!-- Encabezado de Administración (Solo para Administrador) -->
         <template v-if="authStore.isAdmin">
           <div class="sidebar-heading mt-2">

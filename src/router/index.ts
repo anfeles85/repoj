@@ -72,6 +72,15 @@ const routes: RouteRecordRaw[] = [
           title: 'Gestión de Grupos',
           requiresAuth: true
         }
+      },
+      {
+        path: 'analisis-juicios',
+        name: 'analisis-juicios',
+        component: () => import('@/views/AnalisisJuiciosView.vue'),
+        meta: {
+          title: 'Análisis de Juicios Evaluativos',
+          requiresAuth: true
+        }
       }
     ]
   },

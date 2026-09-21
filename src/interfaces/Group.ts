@@ -10,6 +10,8 @@ export interface Group {
   initial_date: string
   final_date: string
   status: GroupStatus
+  evaluative_judgments_file?: string | null
+  evaluative_judgments_file_name?: string | null
   created_at?: string
 }
 
@@ -20,6 +22,8 @@ export interface CreateGroupPayload {
   initial_date: string
   final_date: string
   status?: GroupStatus
+  evaluative_judgments_file?: string | null
+  evaluative_judgments_file_name?: string | null
 }
 
 export interface UpdateGroupPayload {
@@ -29,4 +33,7 @@ export interface UpdateGroupPayload {
   initial_date?: string
   final_date?: string
   status?: GroupStatus
+  evaluative_judgments_file?: string | null
+  evaluative_judgments_file_name?: string | null
 }
+

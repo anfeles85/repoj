@@ -100,16 +100,25 @@ export const groupService = {
     }
 
     // 3. Insertar en Supabase
+    const insertData: Record<string, unknown> = {
+      number: groupNumber,
+      program: payload.program.trim(),
+      shift: payload.shift,
+      initial_date: payload.initial_date,
+      final_date: payload.final_date,
+      status: payload.status || 'EN EJECUCION'
+    }
+
+    if (payload.evaluative_judgments_file !== undefined) {
+      insertData.evaluative_judgments_file = payload.evaluative_judgments_file
+    }
+    if (payload.evaluative_judgments_file_name !== undefined) {
+      insertData.evaluative_judgments_file_name = payload.evaluative_judgments_file_name
+    }
+
     const { data, error } = await supabase
       .from('groups')
-      .insert({
-        number: groupNumber,
-        program: payload.program.trim(),
-        shift: payload.shift,
-        initial_date: payload.initial_date,
-        final_date: payload.final_date,
-        status: payload.status || 'EN EJECUCION'
-      })
+      .insert(insertData)
       .select('*')
       .single()
 
@@ -186,6 +195,12 @@ export const groupService = {
     if (payload.initial_date !== undefined) updateData.initial_date = payload.initial_date
     if (payload.final_date !== undefined) updateData.final_date = payload.final_date
     if (payload.status !== undefined) updateData.status = payload.status
+    if (payload.evaluative_judgments_file !== undefined) {
+      updateData.evaluative_judgments_file = payload.evaluative_judgments_file
+    }
+    if (payload.evaluative_judgments_file_name !== undefined) {
+      updateData.evaluative_judgments_file_name = payload.evaluative_judgments_file_name
+    }
 
     // 4. Ejecutar actualización en Supabase
     const { data, error } = await supabase
@@ -228,6 +243,36 @@ export const groupService = {
     }
 
     return { success: true, message: 'Grupo eliminado con éxito de Supabase.' }
+  },
+
+  /**
+   * Convertir un archivo File del navegador a cadena Base64 Data URL
+   */
+  async fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result)
+        } else {
+          reject(new Error('No se pudo convertir el archivo a Base64'))
+        }
+      }
+      reader.onerror = (error) => reject(error)
+      reader.readAsDataURL(file)
+    })
+  },
+
+  /**
+   * Descargar archivo de juicios evaluativos en el navegador
+   */
+  downloadJudgmentsFile(fileDataUrl: string, fileName: string = 'juicios_evaluativos.xls'): void {
+    const link = document.createElement('a')
+    link.href = fileDataUrl
+    link.download = fileName
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 }
 

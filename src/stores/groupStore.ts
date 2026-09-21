@@ -119,6 +119,27 @@ export const useGroupStore = defineStore('group', () => {
     }
   }
 
+  /**
+   * Descargar archivo de juicios evaluativos asociado a un grupo
+   */
+  const downloadJudgments = (group: Group): void => {
+    if (!group.evaluative_judgments_file) {
+      notificationStore.addNotification(
+        'Este grupo no posee un archivo de juicios evaluativos cargado.',
+        'warning',
+        'Sin Archivo'
+      )
+      return
+    }
+    const fileName = group.evaluative_judgments_file_name || `juicios_evaluativos_${group.number}.xls`
+    groupService.downloadJudgmentsFile(group.evaluative_judgments_file, fileName)
+    notificationStore.addNotification(
+      `Descargando archivo: ${fileName}`,
+      'success',
+      'Descarga Iniciada'
+    )
+  }
+
   return {
     groups,
     currentGroup,
@@ -127,7 +148,8 @@ export const useGroupStore = defineStore('group', () => {
     fetchGroups,
     createGroup,
     updateGroup,
-    deleteGroup
+    deleteGroup,
+    downloadJudgments
   }
 })
 

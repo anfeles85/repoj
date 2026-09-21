@@ -27,12 +27,13 @@ const deleteLoading = ref(false)
 
 // Definición de columnas para DataTable
 const columns: TableColumn<Group>[] = [
-  { key: 'number', label: 'Ficha', width: '140px', align: 'center', sortable: true },
+  { key: 'number', label: 'Ficha', width: '130px', align: 'center', sortable: true },
   { key: 'program', label: 'Programa de Formación', sortable: true },
-  { key: 'shift', label: 'Jornada', width: '130px', align: 'center', sortable: true },
-  { key: 'initial_date', label: 'Fecha Inicio', width: '130px', align: 'center', sortable: true },
-  { key: 'final_date', label: 'Fecha Fin', width: '130px', align: 'center', sortable: true },
-  { key: 'status', label: 'Estado', width: '170px', align: 'center', sortable: true }
+  { key: 'shift', label: 'Jornada', width: '120px', align: 'center', sortable: true },
+  { key: 'initial_date', label: 'Fecha Inicio', width: '120px', align: 'center', sortable: true },
+  { key: 'final_date', label: 'Fecha Fin', width: '120px', align: 'center', sortable: true },
+  { key: 'status', label: 'Estado', width: '160px', align: 'center', sortable: true },
+  { key: 'evaluative_judgments_file', label: 'Juicios', width: '110px', align: 'center', sortable: false }
 ]
 
 // Lista con filtros reactivos aplicados
@@ -216,9 +217,47 @@ const handleConfirmDelete = async () => {
         <GroupStatusBadge type="status" :value="value" />
       </template>
 
+      <!-- Celda de Archivo de Juicios Evaluativos -->
+      <template #cell(evaluative_judgments_file)="{ item }">
+        <div v-if="item.evaluative_judgments_file" class="d-flex align-items-center justify-content-center gap-1">
+          <router-link
+            :to="{ path: '/analisis-juicios', query: { groupId: item.id } }"
+            class="btn btn-sm btn-outline-success py-0 px-2 fw-semibold"
+            style="font-size: 0.78rem;"
+            :title="`Analizar juicios: ${item.evaluative_judgments_file_name || 'Archivo XLS'}`"
+          >
+            <i class="fas fa-chart-pie me-1"></i> Analizar
+          </router-link>
+        </div>
+        <span v-else class="text-muted small" title="Sin archivo de juicios">
+          <i class="fas fa-minus text-muted"></i>
+        </span>
+      </template>
+
       <!-- Columna de Acciones -->
       <template #actions="{ item }">
         <div class="btn-group btn-group-sm" role="group" aria-label="Acciones de grupo">
+          <!-- Analizar juicios si existe archivo -->
+          <router-link
+            v-if="item.evaluative_judgments_file"
+            :to="{ path: '/analisis-juicios', query: { groupId: item.id } }"
+            class="btn btn-outline-info"
+            title="Analizar juicios evaluativos"
+          >
+            <i class="fas fa-chart-pie"></i>
+          </router-link>
+
+          <!-- Descargar archivo de juicios evaluativos si existe -->
+          <button
+            v-if="item.evaluative_judgments_file"
+            type="button"
+            class="btn btn-outline-success"
+            :title="`Descargar ${item.evaluative_judgments_file_name || 'juicios evaluativos'}`"
+            @click="groupStore.downloadJudgments(item)"
+          >
+            <i class="fas fa-download"></i>
+          </button>
+
           <!-- Editar -->
           <button
             type="button"
