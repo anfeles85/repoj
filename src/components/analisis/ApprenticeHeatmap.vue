@@ -69,16 +69,13 @@ const clearSelectedCompetence = () => {
 
       <!-- Leyenda de Convenciones -->
       <div class="d-flex align-items-center gap-3 small">
-        <span class="d-flex align-items-center gap-1">
-          <span class="heatmap-dot bg-success"></span>
+        <span class="d-flex align-items-center gap-1">          
           <span class="text-muted">🟢 Aprobado (100%)</span>
         </span>
         <span class="d-flex align-items-center gap-1">
-          <span class="heatmap-dot bg-warning"></span>
           <span class="text-muted">🟡 Parcial</span>
         </span>
         <span class="d-flex align-items-center gap-1">
-          <span class="heatmap-dot bg-danger"></span>
           <span class="text-muted">🔴 Por evaluar</span>
         </span>
       </div>
@@ -121,8 +118,8 @@ const clearSelectedCompetence = () => {
               type="checkbox"
               role="switch"
             />
-            <label class="form-check-label small fw-semibold text-dark" for="heatmap-in-formation-switch">
-              Solo EN FORMACIÓN
+            Solo <label class="badge bg-success-subtle text-success border border-success-subtle" for="heatmap-in-formation-switch">
+               EN FORMACIÓN
             </label>
           </div>
         </div>

@@ -69,7 +69,7 @@ const approvalBadgeClass = computed(() => {
               </div>
             </div>
             <div class="h3 fw-bold text-success mb-0">{{ formatNumber(summary.approvedJudgments) }}</div>
-            <small class="text-muted" style="font-size: 0.72rem;">Juicios aprobados</small>
+            <small class="text-muted" style="font-size: 0.72rem;">En formación</small>
           </div>
         </div>
       </div>
@@ -85,7 +85,7 @@ const approvalBadgeClass = computed(() => {
               </div>
             </div>
             <div class="h3 fw-bold text-warning mb-0">{{ formatNumber(summary.pendingJudgments) }}</div>
-            <small class="text-muted" style="font-size: 0.72rem;">Pendientes</small>
+            <small class="text-muted" style="font-size: 0.72rem;">En formación</small>
           </div>
         </div>
       </div>
@@ -103,7 +103,7 @@ const approvalBadgeClass = computed(() => {
             <div :class="['h3 fw-bold mb-0', approvalBadgeClass]">
               {{ formatPercentage(summary.approvalPercentage) }}
             </div>
-            <small class="text-muted" style="font-size: 0.72rem;">Tasa global</small>
+            <small class="text-muted" style="font-size: 0.72rem;">En formación</small>
           </div>
         </div>
       </div>

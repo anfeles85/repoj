@@ -2,11 +2,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
-import { useNotificationStore } from '@/stores/notificationStore'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const notificationStore = useNotificationStore()
 
 const userMenuOpen = ref(false)
 
@@ -17,7 +15,6 @@ const emit = defineEmits<{
 const handleLogout = async () => {
   userMenuOpen.value = false
   await authStore.logout()
-  notificationStore.addNotification('Sesión finalizada exitosamente.', 'info', 'Hasta pronto')
   router.push('/login')
 }
 </script>
@@ -46,26 +43,6 @@ const handleLogout = async () => {
 
     <!-- Acciones derechas del Topbar -->
     <div class="d-flex align-items-center gap-2">
-      <!-- Notificaciones -->
-      <div class="dropdown">
-        <button
-          type="button"
-          class="btn btn-light rounded-circle position-relative border shadow-none"
-          title="Notificaciones"
-          aria-label="Ver notificaciones"
-        >
-          <i class="fas fa-bell text-secondary"></i>
-          <span
-            v-if="notificationStore.notifications.length > 0"
-            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-          >
-            {{ notificationStore.notifications.length }}
-          </span>
-        </button>
-      </div>
-
-      <div class="topbar-divider d-none d-sm-block"></div>
-
       <!-- Menú de Usuario -->
       <div class="dropdown position-relative">
         <button

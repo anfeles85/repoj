@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useGroupStore } from '@/stores/groupStore'
 import { judgmentAnalysisService } from '@/services/judgmentAnalysisService'
@@ -24,6 +24,12 @@ const isProcessing = ref(false)
 const processingError = ref<string | null>(null)
 const analyticsResult = ref<GroupAnalyticsResult | null>(null)
 
+// Estados para el selector personalizado con buscador
+const isGroupDropdownOpen = ref(false)
+const groupDropdownRef = ref<HTMLElement | null>(null)
+const groupSearchInputRef = ref<HTMLInputElement | null>(null)
+const searchGroupText = ref('')
+
 // Lista de grupos ordenados (primero los que tienen archivo de juicios)
 const sortedGroups = computed(() => {
   return [...groupStore.groups].sort((a, b) => {
@@ -32,6 +38,44 @@ const sortedGroups = computed(() => {
     return bHas - aHas
   })
 })
+
+// Filtrar grupos por número de ficha, programa o jornada
+const filteredGroups = computed(() => {
+  const query = searchGroupText.value.trim().toLowerCase()
+  if (!query) return sortedGroups.value
+  return sortedGroups.value.filter((g) => {
+    const num = String(g.number || '').toLowerCase()
+    const prog = String(g.program || '').toLowerCase()
+    const shift = String(g.shift || '').toLowerCase()
+    return num.includes(query) || prog.includes(query) || shift.includes(query)
+  })
+})
+
+const toggleGroupDropdown = () => {
+  if (isProcessing.value || groupStore.loading) return
+  isGroupDropdownOpen.value = !isGroupDropdownOpen.value
+  if (isGroupDropdownOpen.value) {
+    setTimeout(() => {
+      groupSearchInputRef.value?.focus()
+    }, 50)
+  }
+}
+
+const closeGroupDropdown = () => {
+  isGroupDropdownOpen.value = false
+  searchGroupText.value = ''
+}
+
+const selectGroup = (groupId: number) => {
+  selectedGroupId.value = groupId
+  closeGroupDropdown()
+}
+
+const handleGroupClickOutside = (event: MouseEvent) => {
+  if (groupDropdownRef.value && !groupDropdownRef.value.contains(event.target as Node)) {
+    closeGroupDropdown()
+  }
+}
 
 const currentSelectedGroup = computed<Group | null>(() => {
   if (!selectedGroupId.value) return null
@@ -95,6 +139,12 @@ onMounted(async () => {
   } else if (groupStore.groups.length > 0) {
     selectedGroupId.value = groupStore.groups[0].id
   }
+
+  document.addEventListener('click', handleGroupClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleGroupClickOutside)
 })
 
 const handleDownloadCurrentFile = () => {
@@ -142,22 +192,101 @@ const goToGroups = () => {
             </label>
           </div>
 
-          <div class="col-12 col-md-5 col-xl-4">
-            <select
-              v-model="selectedGroupId"
-              class="form-select bg-light border-secondary-subtle fw-semibold"
+          <div class="col-12 col-md-6 col-lg-5 col-xl-4 position-relative" ref="groupDropdownRef">
+            <!-- Botón Desplegable Personalizado -->
+            <button
+              type="button"
+              class="form-select form-select-sm bg-light border text-start d-flex justify-content-between align-items-center w-100 py-2 custom-select-btn"
               :disabled="isProcessing || groupStore.loading"
+              @click="toggleGroupDropdown"
             >
-              <option value="" disabled>Seleccione una ficha...</option>
-              <option
-                v-for="group in sortedGroups"
-                :key="group.id"
-                :value="group.id"
-              >
-                Ficha {{ group.number }} - {{ group.program }}
-                {{ group.evaluative_judgments_file ? ' (con archivo XLS)' : ' (sin archivo)' }}
-              </option>
-            </select>
+              <span v-if="currentSelectedGroup" class="text-truncate me-2 fw-semibold text-dark">
+                Ficha {{ currentSelectedGroup.number }} - {{ currentSelectedGroup.program }}
+                <span v-if="currentSelectedGroup.evaluative_judgments_file" class="text-success small fw-normal ms-1">
+                  (con XLS)
+                </span>
+                <span v-else class="text-muted small fw-normal ms-1">
+                  (sin archivo)
+                </span>
+              </span>
+              <span v-else class="text-muted small">
+                Seleccione una ficha...
+              </span>
+              <i :class="['fas fa-chevron-down small text-muted transition-transform ms-1 flex-shrink-0', { 'rotate-180': isGroupDropdownOpen }]"></i>
+            </button>
+
+            <!-- Menú Desplegable Flotante con Buscador -->
+            <div
+              v-if="isGroupDropdownOpen"
+              class="custom-dropdown-menu shadow-lg rounded-3 border bg-white p-2"
+            >
+              <!-- Campo de Búsqueda rápida -->
+              <div class="input-group input-group-sm mb-2">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="fas fa-search text-muted"></i>
+                </span>
+                <input
+                  ref="groupSearchInputRef"
+                  v-model="searchGroupText"
+                  type="text"
+                  class="form-control border-start-0"
+                  placeholder="Buscar por ficha, programa o jornada..."
+                  @click.stop
+                />
+                <button
+                  v-if="searchGroupText"
+                  class="btn btn-outline-secondary"
+                  type="button"
+                  @click.stop="searchGroupText = ''"
+                >
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+
+              <!-- Lista de Grupos / Fichas con Scroll -->
+              <div class="group-options-list pe-1" style="max-height: 240px; overflow-y: auto;">
+                <button
+                  v-for="group in filteredGroups"
+                  :key="group.id"
+                  type="button"
+                  :class="[
+                    'dropdown-item text-start p-2 rounded-2 small mb-1 d-flex align-items-center justify-content-between gap-2',
+                    group.id === selectedGroupId ? 'bg-success-subtle text-success fw-bold' : 'text-dark'
+                  ]"
+                  @click="selectGroup(group.id)"
+                >
+                  <div class="d-flex align-items-center gap-2 text-truncate">
+                    <i
+                      :class="[
+                        'flex-shrink-0',
+                        group.id === selectedGroupId ? 'fas fa-check-circle text-success' : 'far fa-circle text-muted'
+                      ]"
+                    ></i>
+                    <span class="text-truncate">
+                      <strong>Ficha {{ group.number }}</strong> - {{ group.program }}
+                    </span>
+                  </div>
+                  <span
+                    v-if="group.evaluative_judgments_file"
+                    class="badge bg-success-subtle text-success border border-success-subtle flex-shrink-0"
+                    style="font-size: 0.68rem;"
+                  >
+                    <i class="fas fa-file-excel me-1"></i>Con XLS
+                  </span>
+                  <span
+                    v-else
+                    class="badge bg-light text-muted border flex-shrink-0"
+                    style="font-size: 0.68rem;"
+                  >
+                    Sin archivo
+                  </span>
+                </button>
+
+                <div v-if="filteredGroups.length === 0" class="text-muted small text-center py-3">
+                  No se encontraron fichas que coincidan con la búsqueda.
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Información del grupo seleccionado -->
@@ -275,6 +404,45 @@ const goToGroups = () => {
   border-left: 4px solid #39A900 !important;
 }
 
+.custom-select-btn {
+  cursor: pointer;
+  border-color: #ced4da;
+  transition: all 0.15s ease;
+}
+
+.custom-select-btn:hover:not(:disabled) {
+  border-color: #39A900;
+  background-color: #fcfdfc;
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background-color: #ffffff;
+  animation: fadeInDown 0.15s ease-out;
+}
+
+.transition-transform {
+  transition: transform 0.2s ease;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.dropdown-item {
+  white-space: normal !important;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #f1f4f8;
+}
+
 .empty-icon-box {
   width: 64px;
   height: 64px;
@@ -287,5 +455,16 @@ const goToGroups = () => {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

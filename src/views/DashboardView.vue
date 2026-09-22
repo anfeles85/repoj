@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { useUserStore } from '@/stores/userStore'
 import { useGroupStore } from '@/stores/groupStore'
-import BaseButton from '@/components/common/BaseButton.vue'
 import Loading from '@/components/common/Loading.vue'
 import UserStatusBadge from '@/components/users/UserStatusBadge.vue'
 
-const router = useRouter()
 const authStore = useAuthStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
@@ -21,10 +18,6 @@ onMounted(async () => {
     await groupStore.fetchGroups()
   }
 })
-
-const navigateTo = (path: string) => {
-  router.push(path)
-}
 
 const totalUsers = computed(() => userStore.users.length)
 const totalActivos = computed(() => userStore.users.filter((u) => u.status === 'ACTIVO').length)
@@ -42,34 +35,7 @@ const totalGruposEjecucion = computed(() => groupStore.groups.filter((g) => g.st
         <p class="text-muted small mb-0">
           Bienvenido(a), <span class="fw-bold text-dark">{{ authStore.userName }}</span>. Resumen del sistema REPOJ.
         </p>
-      </div>
-
-      <div class="d-flex gap-2 flex-wrap">
-        <BaseButton
-          variant="outline-success"
-          icon="fas fa-chart-pie"
-          @click="navigateTo('/analisis-juicios')"
-        >
-          Análisis Juicios
-        </BaseButton>
-
-        <BaseButton
-          variant="outline-primary"
-          icon="fas fa-users-rectangle"
-          @click="navigateTo('/grupos')"
-        >
-          Grupos
-        </BaseButton>
-
-        <BaseButton
-          v-if="authStore.isAdmin"
-          variant="primary"
-          icon="fas fa-users-cog"
-          @click="navigateTo('/usuarios')"
-        >
-          Gestionar Usuarios
-        </BaseButton>
-      </div>
+      </div>      
     </div>
 
     <!-- Tarjetas de Métricas Estadísticas (Estilo SB Admin 2) -->

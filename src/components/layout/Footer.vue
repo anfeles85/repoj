@@ -9,7 +9,7 @@ const currentYear = new Date().getFullYear()
         <span>Copyright &copy; {{ currentYear }} <strong>REPOJ</strong>. Todos los derechos reservados.</span>
       </div>
       <div class="small">
-        <span class="text-muted">Sistema de Análisis de Juicios Evaluativos | v1.0.0</span>
+        <span class="text-muted">Aplicativo para el Análisis de Juicios Evaluativos | v1.0.0</span>
       </div>
     </div>
   </footer>

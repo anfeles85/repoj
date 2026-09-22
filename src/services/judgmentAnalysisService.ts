@@ -328,11 +328,8 @@ export const judgmentAnalysisService = {
     const totalApprentices = apprenticeMap.size
     const totalCompetences = competenceSet.size
     const totalJudgments = records.length
-    const approvedJudgments = records.filter((r) => r.judgmentStatus === 'APROBADO').length
-    const pendingJudgments = totalJudgments - approvedJudgments
-    const approvalPercentage = totalJudgments > 0 ? (approvedJudgments / totalJudgments) * 100 : 0
 
-    // 2. Métrica especial de aprendices EN FORMACION
+    // 2. Métrica de aprendices EN FORMACION
     // "Resultados pendientes por evaluación = total resultados evaluados de aprendices EN FORMACION / Total resultados de aprendices EN FORMACION"
     const inFormationRecords = records.filter((r) => r.apprenticeStatus === 'EN FORMACION')
     const inFormationTotal = inFormationRecords.length
@@ -346,9 +343,9 @@ export const judgmentAnalysisService = {
     const summary: GroupAnalysisSummary = {
       totalApprentices,
       totalJudgments,
-      approvedJudgments,
-      pendingJudgments,
-      approvalPercentage,
+      approvedJudgments: inFormationApproved,
+      pendingJudgments: inFormationPending,
+      approvalPercentage: inFormationApprovalPercentage,
       totalCompetences,
       pendingEvaluationsRate,
       inFormationEvaluatedOutcomes: inFormationApproved,
@@ -393,7 +390,7 @@ export const judgmentAnalysisService = {
       })
     })
 
-    // 4. Matriz Competencia x Estado & Resultados de Aprendizaje por Competencia
+    // 4. Matriz Competencia x Estado & Resultados de Aprendizaje por Competencia (solo aprendices EN FORMACIÓN)
     const competenceAgg = new Map<
       string,
       {
@@ -405,6 +402,7 @@ export const judgmentAnalysisService = {
       }
     >()
 
+    // Inicializar estructura completa de competencias y RAPs presentes en el archivo
     records.forEach((rec) => {
       let comp = competenceAgg.get(rec.competenceName)
       if (!comp) {
@@ -418,6 +416,21 @@ export const judgmentAnalysisService = {
         competenceAgg.set(rec.competenceName, comp)
       }
 
+      if (!comp.outcomes.has(rec.outcomeName)) {
+        comp.outcomes.set(rec.outcomeName, {
+          name: rec.outcomeName,
+          approved: 0,
+          pending: 0,
+          total: 0
+        })
+      }
+    })
+
+    // Contabilizar únicamente los juicios evaluativos de aprendices en estado EN FORMACION
+    inFormationRecords.forEach((rec) => {
+      const comp = competenceAgg.get(rec.competenceName)
+      if (!comp) return
+
       comp.total++
       if (rec.judgmentStatus === 'APROBADO') {
         comp.approved++
@@ -425,22 +438,14 @@ export const judgmentAnalysisService = {
         comp.pending++
       }
 
-      let outcome = comp.outcomes.get(rec.outcomeName)
-      if (!outcome) {
-        outcome = {
-          name: rec.outcomeName,
-          approved: 0,
-          pending: 0,
-          total: 0
+      const outcome = comp.outcomes.get(rec.outcomeName)
+      if (outcome) {
+        outcome.total++
+        if (rec.judgmentStatus === 'APROBADO') {
+          outcome.approved++
+        } else {
+          outcome.pending++
         }
-        comp.outcomes.set(rec.outcomeName, outcome)
-      }
-
-      outcome.total++
-      if (rec.judgmentStatus === 'APROBADO') {
-        outcome.approved++
-      } else {
-        outcome.pending++
       }
     })
 

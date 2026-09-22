@@ -48,6 +48,7 @@ a {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   z-index: 1040;
 }
 
@@ -102,7 +103,6 @@ a {
   list-style: none;
   padding: 0.5rem 0;
   margin: 0;
-  flex: 1;
 }
 
 .sidebar-nav .nav-item {
@@ -140,6 +140,7 @@ a {
 .sidebar-toggler-wrapper {
   text-align: center;
   padding: 1rem;
+  margin-top: 0.5rem;
 }
 
 .sidebar-toggler {

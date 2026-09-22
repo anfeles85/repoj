@@ -22,21 +22,20 @@ const isCurrentRoute = (path: string) => {
 </script>
 
 <template>
-  <div>
-    <!-- Backdrop para móviles -->
-    <div
-      v-if="mobileOpen"
-      class="sidebar-backdrop d-md-none"
-      @click="emit('closeMobile')"
-    ></div>
+  <!-- Backdrop para móviles -->
+  <div
+    v-if="mobileOpen"
+    class="sidebar-backdrop d-md-none"
+    @click="emit('closeMobile')"
+  ></div>
 
-    <!-- Sidebar Principal -->
-    <aside
-      :class="[
-        'sidebar',
-        { toggled: toggled, 'mobile-open': mobileOpen }
-      ]"
-    >
+  <!-- Sidebar Principal -->
+  <aside
+    :class="[
+      'sidebar',
+      { toggled: toggled, 'mobile-open': mobileOpen }
+    ]"
+  >
       <!-- Logo / Marca -->
       <router-link
         to="/"
@@ -130,7 +129,6 @@ const isCurrentRoute = (path: string) => {
         </button>
       </div>
     </aside>
-  </div>
 </template>
 
 <style scoped>
