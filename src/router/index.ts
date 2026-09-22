@@ -81,6 +81,15 @@ const routes: RouteRecordRaw[] = [
           title: 'Análisis de Juicios Evaluativos',
           requiresAuth: true
         }
+      },
+      {
+        path: 'perfil',
+        name: 'perfil',
+        component: () => import('@/views/PerfilView.vue'),
+        meta: {
+          title: 'Mi Perfil',
+          requiresAuth: true
+        }
       }
     ]
   },

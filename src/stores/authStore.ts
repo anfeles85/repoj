@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import type { User } from '@/interfaces/User'
 import type { LoginCredentials, RegisterInstructorPayload } from '@/interfaces/Auth'
 import authService from '@/services/authService'
+import userService from '@/services/userService'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('repoj_token'))
@@ -68,6 +69,19 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const updateProfile = async (payload: {
+    fullname: string
+    email: string
+    password?: string
+  }): Promise<User> => {
+    if (!user.value) {
+      throw new Error('No hay una sesión activa en el sistema.')
+    }
+    const updatedUser = await userService.updateUser(user.value.id, payload)
+    setUser(updatedUser)
+    return updatedUser
+  }
+
   return {
     token,
     user,
@@ -81,7 +95,8 @@ export const useAuthStore = defineStore('auth', () => {
     setUser,
     login,
     registerInstructor,
-    logout
+    logout,
+    updateProfile
   }
 })
 

@@ -96,6 +96,19 @@ const isCurrentRoute = (path: string) => {
           </router-link>
         </li>
 
+        <!-- Perfil -->
+        <li class="nav-item">
+          <router-link
+            to="/perfil"
+            class="nav-link"
+            :class="{ active: isCurrentRoute('/perfil') }"
+            @click="emit('closeMobile')"
+          >
+            <i class="fas fa-user-circle"></i>
+            <span>Perfil</span>
+          </router-link>
+        </li>
+
         <!-- Encabezado de Administración (Solo para Administrador) -->
         <template v-if="authStore.isAdmin">
           <div class="sidebar-heading mt-2">

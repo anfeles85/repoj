@@ -79,9 +79,9 @@ const handleLogout = async () => {
               Rol: {{ authStore.userRoleLabel }}
             </span>
           </li>
-          <li v-if="authStore.isAdmin">
-            <router-link to="/usuarios" class="dropdown-item py-2 small">
-              <i class="fas fa-users-cog me-2 text-secondary"></i> Gestión de Usuarios
+          <li>
+            <router-link to="/perfil" class="dropdown-item py-2 small">
+              <i class="fas fa-user-circle me-2 text-primary"></i> Mi Perfil
             </router-link>
           </li>
           <li><hr class="dropdown-divider my-1"></li>
