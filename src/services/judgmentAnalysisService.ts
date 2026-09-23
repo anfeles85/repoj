@@ -263,10 +263,14 @@ export const judgmentAnalysisService = {
         apprenticeStatus = 'TRASLADADO'
       } else if (normStatus.includes('aplazado')) {
         apprenticeStatus = 'APLAZADO'
+      } else if (normStatus.includes('por certificar')) {
+        apprenticeStatus = 'POR CERTIFICAR'
+      } else if (normStatus.includes('certificado')) {
+        apprenticeStatus = 'CERTIFICADO'
       } else if (normStatus.includes('formacion') || !rawStatus) {
         apprenticeStatus = 'EN FORMACION'
       } else {
-        apprenticeStatus = rawStatus.toUpperCase()
+        apprenticeStatus = rawStatus.toUpperCase().trim()
       }
 
       // Normalizar juicio evaluativo
@@ -329,9 +333,18 @@ export const judgmentAnalysisService = {
     const totalCompetences = competenceSet.size
     const totalJudgments = records.length
 
-    // 2. Métrica de aprendices EN FORMACION
-    // "Resultados pendientes por evaluación = total resultados evaluados de aprendices EN FORMACION / Total resultados de aprendices EN FORMACION"
-    const inFormationRecords = records.filter((r) => r.apprenticeStatus === 'EN FORMACION')
+    // 2. Métrica de aprendices activos: EN FORMACION, CERTIFICADO, POR CERTIFICAR
+    // Según requerimiento de negocio, los aprendices activos corresponden a: EN FORMACION, CERTIFICADO y POR CERTIFICAR
+    const isActiveApprenticeStatus = (status: string): boolean => {
+      const norm = normalizeText(status)
+      return (
+        norm.includes('formacion') ||
+        norm.includes('por certificar') ||
+        norm.includes('certificado')
+      )
+    }
+
+    const inFormationRecords = records.filter((r) => isActiveApprenticeStatus(r.apprenticeStatus))
     const inFormationTotal = inFormationRecords.length
     const inFormationApproved = inFormationRecords.filter((r) => r.judgmentStatus === 'APROBADO').length
     const inFormationPending = inFormationTotal - inFormationApproved
@@ -362,9 +375,12 @@ export const judgmentAnalysisService = {
     // Lista priorizada de estados SENA
     const knownStatuses = [
       'EN FORMACION',
+      'POR CERTIFICAR',
+      'CERTIFICADO',
+      'CONDICIONADO',
+      'APLAZADO',
       'RETIRO VOLUNTARIO',
       'CANCELADO',
-      'CONDICIONADO',
       'TRASLADADO'
     ]
     const statusDistribution: ApprenticeStatusCount[] = []
@@ -390,7 +406,7 @@ export const judgmentAnalysisService = {
       })
     })
 
-    // 4. Matriz Competencia x Estado & Resultados de Aprendizaje por Competencia (solo aprendices EN FORMACIÓN)
+    // 4. Matriz Competencia x Estado & Resultados de Aprendizaje por Competencia (aprendices activos: EN FORMACION, CERTIFICADO, POR CERTIFICAR)
     const competenceAgg = new Map<
       string,
       {
@@ -426,7 +442,7 @@ export const judgmentAnalysisService = {
       }
     })
 
-    // Contabilizar únicamente los juicios evaluativos de aprendices en estado EN FORMACION
+    // Contabilizar únicamente los juicios evaluativos de aprendices activos (EN FORMACION, CERTIFICADO, POR CERTIFICAR)
     inFormationRecords.forEach((rec) => {
       const comp = competenceAgg.get(rec.competenceName)
       if (!comp) return

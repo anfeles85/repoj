@@ -2,7 +2,9 @@
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useGroupStore } from '@/stores/groupStore'
+import { useAuthStore } from '@/stores/authStore'
 import { judgmentAnalysisService } from '@/services/judgmentAnalysisService'
+import { judgmentPdfReportService } from '@/services/judgmentPdfReportService'
 import type { Group } from '@/interfaces/Group'
 import type { GroupAnalyticsResult } from '@/interfaces/JudgmentAnalysis'
 import BaseButton from '@/components/common/BaseButton.vue'
@@ -18,6 +20,7 @@ import ApprenticeHeatmap from '@/components/analisis/ApprenticeHeatmap.vue'
 const route = useRoute()
 const router = useRouter()
 const groupStore = useGroupStore()
+const authStore = useAuthStore()
 
 const selectedGroupId = ref<number | ''>('')
 const isProcessing = ref(false)
@@ -153,6 +156,29 @@ const handleDownloadCurrentFile = () => {
   }
 }
 
+const isGeneratingPdf = ref(false)
+
+// Permiso para exportar PDF: Instructor, Administrador y Coordinador
+const canDownloadPdf = computed(() => {
+  return authStore.isInstructor || authStore.isAdmin || authStore.isCoordinador
+})
+
+const handleExportPdf = async () => {
+  if (!currentSelectedGroup.value || !analyticsResult.value || isGeneratingPdf.value) return
+  isGeneratingPdf.value = true
+  try {
+    await judgmentPdfReportService.downloadPdfReport(
+      currentSelectedGroup.value,
+      analyticsResult.value,
+      authStore.userName
+    )
+  } catch (err) {
+    console.error('Error al generar el PDF:', err)
+  } finally {
+    isGeneratingPdf.value = false
+  }
+}
+
 const goToGroups = () => {
   router.push('/grupos')
 }
@@ -170,6 +196,19 @@ const goToGroups = () => {
       </div>
 
       <div class="d-flex align-items-center gap-2">
+        <button
+          v-if="analyticsResult && canDownloadPdf"
+          type="button"
+          class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-2 px-3 shadow-none"
+          :disabled="isGeneratingPdf"
+          title="Descargar análisis en PDF"
+          @click="handleExportPdf"
+        >
+          <span v-if="isGeneratingPdf" class="spinner-border spinner-border-sm text-danger" role="status"></span>
+          <i v-else class="fas fa-file-pdf text-danger fs-6"></i>
+          <span class="fw-semibold">{{ isGeneratingPdf ? 'Generando PDF...' : 'Descargar PDF' }}</span>
+        </button>
+
         <BaseButton
           variant="outline-secondary"
           icon="fas fa-users-rectangle"

@@ -5,6 +5,11 @@ declare module '*.vue' {
   const component: DefineComponent<{}, {}, any>
   export default component
 }
+
+declare module 'html2pdf.js' {
+  const html2pdf: () => any
+  export default html2pdf
+}
 interface ImportMetaEnv {
   readonly VITE_API_URL: string
   readonly VITE_APP_TITLE?: string

@@ -197,11 +197,11 @@ onBeforeUnmount(() => {
         </div>
         <div>
           <h6 class="fw-bold mb-0 text-dark">Distribución de Juicios Evaluativos</h6>
-          <small class="text-muted">Porcentajes y RAPs de la competencia seleccionada</small>
+          <small class="text-muted">Porcentajes y RAPs en aprendices activos (En Formación, Certificado, Por Certificar)</small>
         </div>
       </div>
-      <span class="badge bg-success-subtle text-success border border-success-subtle">
-        EN FORMACIÓN
+      <span class="badge bg-success-subtle text-success border border-success-subtle" title="Calculado sobre aprendices en estado EN FORMACIÓN, CERTIFICADO y POR CERTIFICAR">
+        APRENDICES ACTIVOS
       </span>
     </div>
 

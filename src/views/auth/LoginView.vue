@@ -78,10 +78,10 @@ const handleLogin = async () => {
     <div class="card-body p-4 p-sm-5">
       <!-- Encabezado de la tarjeta -->
       <div class="text-center mb-4">
-        <div class="auth-icon-circle bg-primary-subtle text-primary mx-auto mb-3">
-          <i class="fas fa-lock fa-lg"></i>
+        <div class="mb-3">
+          <img src="/logo_repoj.png" alt="Logo REPOJ" class="auth-card-logo" />
         </div>
-        <h2 class="h4 fw-bold text-dark mb-1">Iniciar Sesión</h2>
+        <h2 class="h4 fw-bold text-dark mb-1">Iniciar sesión</h2>
         <p class="text-muted small mb-0">
           Ingrese sus credenciales para acceder a la plataforma REPOJ
         </p>
@@ -182,12 +182,16 @@ const handleLogin = async () => {
 </template>
 
 <style scoped>
-.auth-icon-circle {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.auth-card-logo {
+  height: 80px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  transition: transform 0.25s ease;
+  filter: drop-shadow(0 4px 10px rgba(57, 169, 0, 0.2));
+}
+
+.auth-card-logo:hover {
+  transform: scale(1.05);
 }
 </style>

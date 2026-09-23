@@ -42,12 +42,9 @@ const isCurrentRoute = (path: string) => {
         class="sidebar-brand text-decoration-none"
         @click="emit('closeMobile')"
       >
-        <div class="sidebar-brand-icon me-2">
-          <i class="fas fa-layer-group"></i>
-        </div>
-        <div class="sidebar-brand-text">
-          <span>REPOJ</span>
-        </div>
+        <div class="sidebar-brand-icon">
+          <img src="/logo_repoj.png" alt="Logo REPOJ" class="auth-card-logo" />
+        </div>        
       </router-link>
 
       <!-- Encabezado de sección -->
@@ -145,5 +142,39 @@ const isCurrentRoute = (path: string) => {
 </template>
 
 <style scoped>
-/* Los estilos generales residen en main.css */
+.sidebar-brand {
+  height: auto;
+  min-height: 95px;
+  padding: 0.75rem 1rem;
+}
+
+.sidebar-brand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.auth-card-logo {
+  height: 80px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  transition: transform 0.25s ease;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
+}
+
+.sidebar-brand:hover .auth-card-logo {
+  transform: scale(1.05);
+}
+
+.sidebar.toggled .sidebar-brand {
+  min-height: 75px;
+  padding: 0.5rem;
+}
+
+.sidebar.toggled .auth-card-logo {
+  height: 50px;
+  max-width: 65px;
+}
 </style>

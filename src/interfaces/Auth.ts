@@ -33,3 +33,22 @@ export interface ForgotPasswordResponse {
   message: string
   token?: string
 }
+
+export interface PasswordResetTokenRecord {
+  id: number
+  user_id: number
+  email: string
+  token: string
+  expires_at: string
+  used: boolean
+  used_at: string | null
+  created_at: string
+}
+
+export interface ValidateTokenResult {
+  valid: boolean
+  tokenRecord?: PasswordResetTokenRecord
+  errorType?: 'NOT_FOUND' | 'USED' | 'EXPIRED'
+  message?: string
+}
+

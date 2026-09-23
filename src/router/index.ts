@@ -36,6 +36,15 @@ const routes: RouteRecordRaw[] = [
           title: 'Recuperar Contraseña',
           guestOnly: true
         }
+      },
+      {
+        path: '/restablecer-contrasena',
+        name: 'reset-password',
+        component: () => import('@/views/auth/ResetPasswordView.vue'),
+        meta: {
+          title: 'Restablecer Contraseña',
+          guestOnly: true
+        }
       }
     ]
   },

@@ -10,6 +10,10 @@ const getStatusBadgeClass = (status: string): string => {
   switch (status) {
     case 'EN FORMACION':
       return 'bg-success'
+    case 'CERTIFICADO':
+      return 'bg-primary'
+    case 'POR CERTIFICAR':
+      return 'bg-info text-dark'
     case 'RETIRO VOLUNTARIO':
       return 'bg-secondary'
     case 'CANCELADO':
@@ -29,6 +33,10 @@ const getProgressBarClass = (status: string): string => {
   switch (status) {
     case 'EN FORMACION':
       return 'bg-success'
+    case 'CERTIFICADO':
+      return 'bg-primary'
+    case 'POR CERTIFICAR':
+      return 'bg-info'
     case 'RETIRO VOLUNTARIO':
       return 'bg-secondary'
     case 'CANCELADO':

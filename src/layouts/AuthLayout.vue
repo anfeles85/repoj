@@ -11,13 +11,10 @@ const notificationStore = useNotificationStore()
     <header class="py-3 px-4">
       <div class="container-fluid d-flex align-items-center justify-content-between">
         <router-link to="/" class="d-flex align-items-center text-white text-decoration-none gap-2">
-          <div class="auth-brand-icon">
-            <i class="fas fa-layer-group"></i>
-          </div>
           <span class="fs-4 fw-bold tracking-wide">REPOJ</span>
         </router-link>
         <span class="badge bg-white bg-opacity-25 text-white fw-normal px-3 py-2 rounded-pill">
-          Plataforma de Gestión y Seguimiento
+          Aplicativo para el Análisis de Juicios Evaluativos | v1.0.0 
         </span>
       </div>
     </header>
@@ -71,15 +68,16 @@ const notificationStore = useNotificationStore()
   background: var(--primary-gradient, linear-gradient(180deg, #4e73df 10%, #224abe 100%));
 }
 
-.auth-brand-icon {
-  width: 40px;
+.auth-brand-logo {
   height: 40px;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.25));
+  transition: transform 0.2s ease;
+}
+
+.auth-brand-logo:hover {
+  transform: scale(1.05);
 }
 
 .tracking-wide {

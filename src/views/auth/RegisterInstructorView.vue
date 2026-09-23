@@ -99,8 +99,8 @@ const handleRegister = async () => {
     <div class="card-body p-4 p-sm-5">
       <!-- Encabezado de la tarjeta -->
       <div class="text-center mb-4">
-        <div class="auth-icon-circle bg-success-subtle text-success mx-auto mb-3">
-          <i class="fas fa-chalkboard-teacher fa-lg"></i>
+        <div class="mb-3">
+          <img src="/logo_repoj.png" alt="Logo REPOJ" class="auth-card-logo" />
         </div>
         <h2 class="h4 fw-bold text-dark mb-1">Registro de Instructor</h2>
         <p class="text-muted small mb-2">
@@ -236,12 +236,16 @@ const handleRegister = async () => {
 </template>
 
 <style scoped>
-.auth-icon-circle {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.auth-card-logo {
+  height: 80px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  transition: transform 0.25s ease;
+  filter: drop-shadow(0 4px 10px rgba(57, 169, 0, 0.2));
+}
+
+.auth-card-logo:hover {
+  transform: scale(1.05);
 }
 </style>

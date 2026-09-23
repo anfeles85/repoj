@@ -11,6 +11,7 @@ const goHome = () => {
 
 <template>
   <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center">
+    <img src="/logo_repoj.png" alt="Logo REPOJ" class="mb-3 notfound-logo" />
     <div class="display-1 fw-bolder text-primary mb-2">404</div>
     <h2 class="fw-bold text-dark mb-3">Página No Encontrada</h2>
     <p class="text-muted mb-4" style="max-width: 480px;">
@@ -27,5 +28,10 @@ const goHome = () => {
 </template>
 
 <style scoped>
-/* Los estilos generales residen en main.css */
+.notfound-logo {
+  height: 80px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(57, 169, 0, 0.15));
+}
 </style>
