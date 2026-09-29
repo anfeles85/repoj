@@ -1,0 +1,16 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+  functions = "netlify/functions"
+
+# Redirigir el endpoint de envío de correo a la Serverless Function de Netlify
+[[redirects]]
+  from = "/api/mail/send"
+  to = "/.netlify/functions/send-mail"
+  status = 200
+
+# Redirigir todas las rutas a index.html para soportar el modo History de Vue Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
